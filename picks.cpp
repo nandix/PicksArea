@@ -29,6 +29,9 @@ using namespace std;
 typedef long int LI;
 typedef long double LD;
 
+ofstream debug;
+const bool DEBUGGING = false;
+
 struct point
 {
 	LD x,y;
@@ -42,6 +45,13 @@ struct vect
 struct poly{
 	vector<point> polygon;
 };
+
+void print_point(point p, ofstream &fout ){
+
+	fout << "( " << p.x << ", " << p.y << " ) ";
+
+	return;
+}
 
 bool colinear(point p1, point p2, point p3)
 {
@@ -57,38 +67,6 @@ bool colinear(point p1, point p2, point p3)
 		return false; 
 }
 
-// Returns true if point bet is colinear between p1 and p2
-bool between_colinear(point p1, point p2, point bet){
-
-
-	// Calculate the slope from p1 to bet and p2 to bet
-	// If the point is between and colinear, the slopes will be identical
-	// with opposite sign
-	// DOES NOT TAKE CARE OF 0 SLOPE CASE
-	double num_slope1 = double(bet.y - p1.y);
-	double denom_slope1 = double(bet.x - p1.x);
-	double num_slope2 = double(bet.y - p2.y);
-	double denom_slope2 = double(bet.x - p2.x);
-
-	// If the numerator is zero, see if the point lies between the two
-	if( num_slope1 == 0 && num_slope2 == 0 )
-		return !((denom_slope1 > 0) == (denom_slope2 > 0 ));
-
-	// If the denominator is zero, see if the point lies between the two
-	if( denom_slope1 == 0 && denom_slope2 == 0 )
-		return !((num_slope1 > 0) == (num_slope2 > 0 ));
-
-
-	double slope1 = num_slope1/denom_slope1;
-	double slope2 = num_slope2/denom_slope2;
-
-	if( slope2 == -slope1 ){
-		return true;
-	}
-
-	return false;
-
-}
 
 bool straddle (point p1, point p2, point p3, point p4)
 {
@@ -171,6 +149,108 @@ bool inside_poly(vector<point> points, point checkPoint)
 		return true;
 }
 
+
+// Returns true if point bet is colinear between p1 and p2
+bool between_colinear(point p1, point p2, point bet){
+
+
+	// Calculate the slope from p1 to bet and p2 to bet
+	// If the point is between and colinear, the slopes will be identical
+	// with opposite sign
+	// DOES NOT TAKE CARE OF 0 SLOPE CASE
+	
+	// print_point(p1, debug);
+	// print_point(p2, debug);
+	// print_point(bet, debug);
+	// debug << endl;
+	bool ret_val;
+
+	int num_slope1 = (bet.y - p1.y);
+	int denom_slope1 = (bet.x - p1.x);
+	int num_slope2 = (bet.y - p2.y);
+	int denom_slope2 = (bet.x - p2.x);
+
+	// So we don't double count verticies, see if our point is the first 
+	// vertex passed.
+	if( denom_slope1 == 0 && num_slope1 == 0 ){
+		
+		if( DEBUGGING ){
+			debug << "Vertex: ";
+			print_point(bet, debug);
+			debug << endl;
+		}	
+
+		return true;
+	}
+
+	// So we don't accidentally double count verticies, make sure the 
+	// second point (p2) is not the same point as bet.
+	if( !(denom_slope2 == 0 && num_slope2 == 0)){
+		// If the numerator is zero, see if the point lies between the two
+		if( num_slope1 == 0 && num_slope2 == 0 ){
+			ret_val = !((denom_slope1 > 0) == (denom_slope2 > 0 ));
+			if( DEBUGGING && ret_val ){
+				debug << "Zero Numerator: ";
+				print_point(bet, debug);
+				debug << endl;
+			}
+			return ret_val;
+		}
+		// If the denominator is zero, see if the point lies between the two
+		if( denom_slope1 == 0 && denom_slope2 == 0 ){
+			ret_val = !((num_slope1 > 0) == (num_slope2 > 0 ));
+
+			if( DEBUGGING && ret_val ){
+				debug << "Zero Numerator: ";
+				print_point(bet, debug);
+				debug << endl;
+			}
+
+			return ret_val;
+		}
+	}
+
+
+	// An attempt to use slopes to find colinear. Taking another apporach
+	// double slope1 = num_slope1/denom_slope1;
+	// double slope2 = num_slope2/denom_slope2;
+
+	// if( slope2 == -slope1 ){
+	// 	return true;
+	// }
+	// 
+	// To determine if a point (without a zero rise or run) is on the line,
+	// make a bounding box and see if the point is inside the box. If the 
+	// point lies inside the box, check if it is colinear.
+	vector<point> bound;
+	point temp;
+
+	// Create the bounding box
+	bound.push_back(p1);
+
+	temp.x = p1.x;
+	temp.y = p2.y;
+	bound.push_back(temp);
+
+	bound.push_back(p2);
+
+	temp.x = p2.x;
+	temp.y = p1.y;
+	bound.push_back(temp);
+
+	if( inside_poly(bound, bet) ){
+		if( colinear(p1, p2, bet)){
+			debug << "Inside & colin: ";
+			print_point(bet, debug);
+			debug << endl;
+			return true;
+		}
+	}
+
+	return false;
+
+}
+
 double area( vector<point> p ){
 	double result = 0;
 
@@ -235,6 +315,8 @@ vector<point> B(LI min_x, LI min_y, LI max_x, LI max_y, poly p, LI &count){
 
 int main(int argc, char** argv)
 {
+
+	debug.open("DEBUG.txt");
 
 	ifstream fin;
 	ofstream fout;
