@@ -350,6 +350,8 @@ int main(int argc, char** argv)
 		cout << "Could not open input file " << in << endl;
 		return 1;
 	}
+	else
+		fout << "Reading input from file " << in << endl;
 
 
 	// Read in all the points in the polygon
@@ -362,16 +364,21 @@ int main(int argc, char** argv)
 	inside_points = I(min_x, min_y, max_x, max_y, shape, n_inside);
 	boundary_points = B(min_x, min_y, max_x, max_y, shape, n_boundary);
 
-	cout << "Inside: " << n_inside << endl;
+	fout << "Area = " << n_inside + n_boundary/2.0 - 1 << endl;
+	fout << "I(P) = " << n_inside << endl;
+	fout << "B(P) = " << n_boundary << endl;
+	fout << "Interior points" << endl;
+
+
 	for(int i = 0; i < inside_points.size(); i++ ){
-		cout << "( " << inside_points[i].x << ", " << inside_points[i].y << " )" << endl;
+		fout << "     " << inside_points[i].x << " " << inside_points[i].y << endl;
 	}
-	cout << "Boundary: " << n_boundary << endl;
+	
+	fout << "Boundary points" << endl;
 	for(int i = 0; i < boundary_points.size(); i++ ){
-		cout << "( " << boundary_points[i].x << ", " << boundary_points[i].y << " )" << endl;
+		fout << "     " << boundary_points[i].x << " " << boundary_points[i].y << endl;
 	}
-	cout << "Pick's Area: " << n_inside + n_boundary/2.0 - 1 << endl;
-	cout << "Geom Area: " << area( shape.polygon ) << endl;;
+	
 
 
 
